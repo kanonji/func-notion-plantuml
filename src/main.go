@@ -49,7 +49,10 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 
 	res := &events.APIGatewayProxyResponse{
 		StatusCode: http.StatusOK,
-		Headers:    map[string]string{"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
+		Headers: map[string]string{
+			"Cache-Control":               "no-store, no-cache, must-revalidate, max-age=0",
+			"Access-Control-Allow-Origin": "https://www.notion.so",
+		},
 	}
 	switch filetype {
 	case "png":
