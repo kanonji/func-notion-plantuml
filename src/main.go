@@ -38,13 +38,13 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	plantUmlText, err := fetchBlockText(blockId)
 	if err != nil {
 		fmt.Println(err)
-		return &events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError, Body: "Internal Server Error"}, nil
+		return &events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError, Body: "Fail to fetch text block from Notion.\nMake sure that Notion connect is set up on the page you want to embed."}, nil
 	}
 
 	fileBytes, err := fetchPlantUmlImage(*plantUmlText, filetype)
 	if err != nil {
 		fmt.Println(err)
-		return &events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError, Body: "Internal Server Error"}, nil
+		return &events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError, Body: "Fail to generate image. Ask admin."}, nil
 	}
 
 	res := &events.APIGatewayProxyResponse{
