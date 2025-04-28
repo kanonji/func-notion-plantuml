@@ -137,7 +137,9 @@ func plantUMLEncode(input string) (string, error) {
 	compressed := buf.Bytes()
 
 	// Step 2: 独自Base64エンコード
-	return encode64(compressed), nil
+	encoded := encode64(compressed)
+
+	return "~1" + encoded, nil
 }
 
 // encode64 はPlantUML独自Base64エンコードを行う
