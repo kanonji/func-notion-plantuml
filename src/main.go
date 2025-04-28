@@ -18,7 +18,7 @@ import (
 
 const notionApiUrl string = "https://api.notion.com/v1/blocks/"
 const notionVersion string = "2022-02-22"
-const krokiUrl string = "https://kroki.io/plantuml/"
+const serverUrl string = "https://www.plantuml.com/plantuml/"
 
 var notionAccessKey = os.Getenv("NOTION_ACCESS_KEY")
 
@@ -105,7 +105,7 @@ func fetchPlantUmlImage(plantUmlText, filetype string) ([]byte, error) {
 		return nil, fmt.Errorf("fail on encode(plantUmlText): %w", err)
 	}
 
-	url, _ := url.Parse(krokiUrl)
+	url, _ := url.Parse(serverUrl)
 	url.Path = path.Join(url.Path, filetype, plantumlBase64)
 	res, err := http.Get(url.String())
 	if err != nil {
