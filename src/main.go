@@ -100,9 +100,9 @@ func fetchBlockText(blockId string) (*string, error) {
 }
 
 func fetchPlantUmlImage(plantUmlText, filetype string) ([]byte, error) {
-	plantumlBase64, err := encode(plantUmlText)
+	plantumlBase64, err := plantUMLEncode(plantUmlText)
 	if err != nil {
-		return nil, fmt.Errorf("fail on encode(plantUmlText): %w", err)
+		return nil, fmt.Errorf("fail on plantUMLEncode(plantUmlText): %w", err)
 	}
 
 	url, _ := url.Parse(serverUrl)
@@ -120,17 +120,51 @@ func fetchPlantUmlImage(plantUmlText, filetype string) ([]byte, error) {
 	return fileBytes, nil
 }
 
-func encode(input string) (string, error) {
-	var buffer bytes.Buffer
-	writer, err := zlib.NewWriterLevel(&buffer, 9)
+// エンコードに使うPlantUML独自のアルファベット
+var encodeMap = []byte("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_")
+
+// PlantUMLEncode はPlantUML用にテキストをエンコードします
+func plantUMLEncode(input string) (string, error) {
+	// Step 1: zlib圧縮
+	var buf bytes.Buffer
+	w := zlib.NewWriter(&buf)
+	_, err := w.Write([]byte(input))
 	if err != nil {
-		return "", fmt.Errorf("fail to create the writer: %w", err)
+		return "", err
 	}
-	_, err = writer.Write([]byte(input))
-	writer.Close()
-	if err != nil {
-		return "", fmt.Errorf("fail to create the payload: %w", err)
+	w.Close()
+
+	compressed := buf.Bytes()
+
+	// Step 2: 独自Base64エンコード
+	return encode64(compressed), nil
+}
+
+// encode64 はPlantUML独自Base64エンコードを行う
+func encode64(data []byte) string {
+	var result []byte
+
+	for i := 0; i < len(data); i += 3 {
+		if i+2 < len(data) {
+			n := uint(data[i])<<16 | uint(data[i+1])<<8 | uint(data[i+2])
+			result = append(result, encode3bytes(n)...) // スライスを展開する
+		} else if i+1 < len(data) {
+			n := uint(data[i])<<16 | uint(data[i+1])<<8
+			result = append(result, encode3bytes(n)[:3]...) // 2バイト分だけ使う
+		} else {
+			n := uint(data[i]) << 16
+			result = append(result, encode3bytes(n)[:2]...) // 1バイト分だけ使う
+		}
 	}
-	result := base64.URLEncoding.EncodeToString(buffer.Bytes())
-	return result, nil
+	return string(result)
+}
+
+// 3バイトを4文字にエンコード
+func encode3bytes(n uint) []byte {
+	return []byte{
+		encodeMap[(n>>18)&0x3F],
+		encodeMap[(n>>12)&0x3F],
+		encodeMap[(n>>6)&0x3F],
+		encodeMap[n&0x3F],
+	}
 }
